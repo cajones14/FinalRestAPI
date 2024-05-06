@@ -22,7 +22,8 @@ connectDB();
 app.use(logger);
 
 //Cors = cross origin resource sharing
-app.use(cors(corsOptions));
+//app.use(cors(corsOptions));
+app.use(cors());
 
 //built in middleware to handle unlencoded data
 //in other words, form data:
