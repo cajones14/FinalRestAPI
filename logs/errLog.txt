@@ -1,0 +1,24 @@
+20240430	13:04:53	b0be7aaf-7e3e-4dcf-bc86-54f04fcf0391	TypeError: Cannot read properties of undefined (reading 'toUpperCase')
+20240430	13:05:42	f7bfbf67-1078-4b76-a24c-1184eba34772	TypeError: Cannot read properties of undefined (reading 'toUpperCase')
+20240430	13:05:51	aa9014db-81e6-4f9b-a036-b040eb184124	TypeError: Cannot read properties of undefined (reading 'toUpperCase')
+20240430	13:07:52	4f449258-6199-424b-8203-07b78bf07747	TypeError: Cannot read properties of undefined (reading 'toUpperCase')
+20240430	13:07:53	2c44539c-1053-4ed5-90f9-19b319a742e6	TypeError: Cannot read properties of undefined (reading 'toUpperCase')
+20240430	13:10:25	66df7c04-21e6-41aa-84c0-6cf86135356b	ReferenceError: data is not defined
+20240430	13:11:05	56706842-3ce7-4466-abdf-57664a1940ab	ReferenceError: data is not defined
+20240430	13:14:01	c503736b-fc52-475f-aeac-a03d582d3d08	ReferenceError: data is not defined
+20240430	13:17:05	d3debde6-fa04-4bf9-bf0d-2f535afd0945	ReferenceError: data is not defined
+20240430	13:17:10	ab853f08-a8d3-493e-8731-925f71970067	ReferenceError: data is not defined
+20240430	13:44:40	fa151ebd-d1cb-408d-b171-2f20967e5cc2	SyntaxError: Unexpected token '=', ..."funfacts" = []
+}" is not valid JSON
+20240430	13:49:04	450479b8-856d-42bb-88b8-dd4822c54165	ReferenceError: data is not defined
+20240430	13:49:07	5d66e5b4-c9aa-4a2e-b672-4e162eec2e46	ReferenceError: data is not defined
+20240430	13:49:14	a6c816a7-213d-4592-9e3d-2acb96fb72c2	ReferenceError: data is not defined
+20240430	13:49:15	ef21ce01-170b-4f71-9fe4-2d0160a2c79a	ReferenceError: data is not defined
+20240430	13:49:15	858b2cfd-b788-4255-a9df-7dd9b8bba5ef	ReferenceError: data is not defined
+20240430	13:49:16	36bab3ee-9f67-4dad-8945-bd4676a416ee	ReferenceError: data is not defined
+20240430	13:56:21	20c8eb97-ba18-4b77-87c4-053f791d8a76	ReferenceError: data is not defined
+20240430	13:56:26	f1535350-81a7-44f9-8b7f-119ed1790139	ReferenceError: data is not defined
+20240430	13:56:36	64e51406-06b0-4593-9e35-a9b1df6599bb	ReferenceError: data is not defined
+20240430	15:54:33	2d555bd5-2dad-4736-a3fa-a4a4e988d87d	SyntaxError: Unexpected token 'H', ..."s": [
+    Home of th"... is not valid JSON
+20240506	08:36:07	65deb7cf-5b2b-4f81-9fc6-7ef7c96d00c2	SyntaxError: Expected ',' or '}' after property value in JSON at position 46
