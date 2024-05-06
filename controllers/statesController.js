@@ -6,20 +6,6 @@ const data = {
     setStates: function (data) {this.states = data}
 };
 
-//combine the states with the json data
-/* async function mergeData(){
-    for(const state in data.states){
-        //search MongoDB for entered state and check for funfacts
-        const fact = await State.findOne({statecode: data.states[state].code}).exec(); //comparing each state
-        if(fact){
-            data.states[state].funfacts = fact.funfacts; //combine funfacts with statesData.json
-        }
-    }
-} */
-
-//run the merge function
-//mergeData();
-
 //GET all of the states
 const getAllStates = async (req, res) => {
     //check for a query
@@ -118,7 +104,7 @@ const getFunFact = async (req, res) => {
     const duplicate = await State.findOne({ stateCode: state.code }).exec();
 
     //If no state found or no fun facts
-    if(!duplicate || duplicate.funfacts === null || !state.funfacts){
+    if(!duplicate || duplicate.funfacts === null){ // || !state.funfacts
         return res.status(400).json({
             "message": `No Fun Facts found for ${state.state}`
         });
