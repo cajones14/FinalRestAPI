@@ -8,33 +8,55 @@ const data = {
 
 //GET all of the states
 const getAllStates = async (req, res) => {
-    //check for a query
-    if(req.query){
-        //if contig is true, remove AK and HI
-        if(req.query.contig == 'true'){
-            const result = data.states.filter(st => st.code != "AK" && st.code != "HI");
-            res.json(result);
-            return;
-        }
-        //display only AK and HI if contig is false
-        else if(req.query.contig == 'false'){
-            const result = data.states.filter( st => st.code == "AK" || st.code == "HI");
-            res.json(result);
-            return;
-        }  
+    let statesList;
+
+    // ../states/?contig=true
+    // Return only contiguous 48
+    if(req.query.contig === 'true') {
+        statesList = data.states.filter(st => st.code !== "AK" && st.code !== "HI");
     }
 
-    //if not specified return all states
-    res.json(data.states);
+    // ../states/?contig=true
+    // Return non-contiguous 2
+    else if (req.query.contig === 'false') {
+        statesList = data.states.filter( st => st.code === "AK" || st.code === "HI");     
+    }
+
+    // Return all 50
+    else {
+        statesList = data.states;  
+    }     
+    
+    // database data
+    for(let state of statesList) {
+      try {
+          const stateExists = await State.findOne({stateCode: state.code}).exec();
+          if (stateExists.funfacts) {
+              state.funfacts = [...stateExists.funfacts];
+          }
+      } catch (err) {
+          console.log(err);
+          console.log("Get failed: " + err);
+      }
+    }
+    // ../states/
+    res.json(statesList);
 }
 
 //GET a single state
 const getState = async (req, res) => {
-    //set state code to uppercase
     const code = req.params.state.toUpperCase();
-    //search for specific state
-    const state = data.states.find(st => st.code == code);
-    //return the state
+    const state = data.states.find( st => st.code === code);
+
+    try {
+      const stateExists = await State.findOne({stateCode: state.code}).exec();
+      if (stateExists.funfacts) {
+          state.funfacts = [...stateExists.funfacts];
+      }
+    } catch (err) {
+        console.log(err);
+        console.log("Get failed: " + err);
+    }
     res.json(state);
 }
 
@@ -92,180 +114,128 @@ const getAdmission = (req, res) => {
 
 //GET a random fun fact
 const getFunFact = async (req, res) => {
-    //find state code
-    const state = data.states.find( st => st.code == req.params.state.toUpperCase());
-    //check if fun facts for state exist
-    if(!state){
-        return res.status(400).json({
-            "message": `Invalid state abbreviation parameter`
-        });
-    }
-    //check for matching state in database
-    const duplicate = await State.findOne({ stateCode: state.code }).exec();
+    const code = req.params.state.toUpperCase();
+    const state = data.states.find( st => st.code === code);
 
-    //If no state found or no fun facts
-    if(!duplicate || duplicate.funfacts === null){ // || !state.funfacts
-        return res.status(400).json({
-            "message": `No Fun Facts found for ${state.state}`
-        });
+    const stateInDB = await State.findOne({stateCode: code}).exec();
+    if(!stateInDB) { 
+        res.status(201).json({ 'message': `No Fun Facts found for ${state.state}` });
+    } 
+    else {
+        const randomFact = stateInDB.funfacts[Math.floor((Math.random()*stateInDB.funfacts.length))];
+        res.status(201).json({ 'funfact': randomFact });
     }
-        
-    
-    //State was found and has fun facts
-    res.json({
-        "funfact": duplicate.funfacts[getRandomInt(duplicate.funfacts.length)]
-    });
 }
 
 //create fun facts
 const createFunFact = async (req, res) => {
-    let funfactsArr = [];
+    const code = req.params.state.toUpperCase();
+    const funfact = req.body.funfacts;
 
-    //find state in the request param
-    const state = data.states.find(stt => stt.code === req.params.state.toUpperCase());
-
-    //if not found
-    if(!state){
-        return res.status(400).json({
-            "message": `Invalid state abbreviation parameter`
-        });
+    // no funfact entered
+    if(!funfact) {
+        return res.status(400).json({ 'message': 'State fun facts value required' });
     }
-    //check for states funfacts on mongoDB
-    const duplicate = await State.findOne({ stateCode: state.code }).exec();
-    const funfactsBody = req.body.funfacts;
-
-    //if there is no fun facts in the body
-    if(!funfactsBody){
-        return res.status(400).json({
-            "message": `State fun facts value required` //Edit Maybe
-        });
+  
+    // funfact is not an array
+    else if(!Array.isArray(funfact)) { 
+        return res.status(400).json({ 'message': 'State fun facts value must be an array' });
     }
-    //If not null check for fun facts and push it in to funfacts array
-    if(duplicate?.funfacts) funfactsArr = duplicate.funfacts;
 
-    //if fun facts body is not an array
-    if(!Array.isArray(funfactsBody)){
-        return res.status(400).json({
-            "message": `State fun facts value must be an array`
-        });
-    }else{
-        funfactsArr = funfactsArr.concat(funfactsBody);
-    }
-    if(!duplicate){
-        try{
+    const stateInDB = await State.findOne({ stateCode: code }).exec();
+    
+      // state record not yet in DB
+        if (!stateInDB) {
+        try {
             const result = await State.create({
-                stateCode: state.code,
-                funfacts: funfactsArr
-            });
-            result.save();
-            res.json(result);
-        }catch(err){
-            console.error(err);
+            stateCode: code,
+            funfacts: funfact
+        });
+        res.status(201).json(result);
+        } catch (err) {
+            console.log("Create failed: " + err);
         }
-        return;
     }
-    //Duplicate is a state in the DB so overwrite with new info
-    duplicate.overwrite({stateCode: duplicate.stateCode, funfacts: funfactsArr });
-    duplicate.save();
-    res.json(duplicate);
+
+    // state record is in DB
+    else {
+        try {
+        stateInDB.funfacts = stateInDB.funfacts.concat(funfact);
+        const result = await stateInDB.save();
+        res.status(201).json(result);
+        } catch (err) {
+            console.log("Save failed: " + err);
+        }
+    }
 }
 
 const updateFunFact = async (req, res) => {
-    //Same for checking a state 
-    const state = data.states.find(stt => stt.code === req.params.state.toUpperCase());
-    if(!state){
-        return res.status(400).json({
-            "message":  `Invalid state abbreviateion parameter`
-        });
-    }
-    //check for duplicate states in DB
-    const duplicate = await State.findOne({ stateCode: state.code }).exec();
+    const code = req.params.state.toUpperCase();
+    const state = data.states.find( st => st.code === code);
+    const index = req.body.index;
+    const x = index - 1;
 
-    //Check for index and funfact
-    //make sure data is valid and exists
-    if(!req.body.index) return res.status(400).json({
-        "message": "State fun fact index value required"
-    });
+    const stateInDB = await State.findOne({ stateCode: code }).exec();
 
-    if(!Number.isInteger(parseInt(req.body.index))){
-        return res.status(400).json({
-            "message": "Index must be enetered without quotes"
-        });
-    } 
-
-    if(!req.body.funfact){
-        return res.status(400).json({
-            "message": "State fun fact value required"
-        });
-    } 
-
-    if(!duplicate){
-        return res.status(400).json({
-            "message": `No Fun Facts found for ${state.state}`
-        });
+    // no index entered
+    if (!index) {
+        return res.status(400).json({ 'message': 'State fun fact index value required' });
     }
 
-    if(!duplicate.funfacts[req.body.index - 1]){
-        return res.status(400).json({
-            "message": `No Fun Fact found at that index for ${state.state}`
-        });
-    } 
-    //for out of bounds errors
-    try{
-        duplicate.funfacts[req.body.index-1] = req.body.funfact;
-        duplicate.save();
-        res.json(duplicate);
-    }catch(err){
-        console.error(err);
-        return res.status(400).json({
-            "message": "An error ocurred, index out of bounds"
-        });
+    // no updated fun fact entered
+    else if (!req.body.funfact) {
+        return res.status(400).json({ 'message': 'State fun fact value required' });
+    }
+
+    // state record not in DB
+    else if (!stateInDB) {
+        return res.status(404).json({ 'message': `No Fun Facts found for ${state.state}` });
+    }
+
+    // index value not in array
+    else if (index > stateInDB.funfacts.length) {
+        return res.status(404).json({ 'message': `No Fun Fact found at that index for ${state.state}` });
+    }
+
+    try {
+        stateInDB.funfacts.splice(x, 1, req.body.funfact);
+        const operation = await stateInDB.save();
+    
+        res.status(200).json(operation);
+    } catch (err) {
+        console.log("Update failed: " + err);
     }
 }
 
 const deleteFunFact = async(req, res) => {
-    const state = data.states.find( stt => stt.code === req.params.state.toUpperCase());
-    if(!state){
-        return res.status(400).json({ 
-            "message": `Invalid state abbreviation parameter` 
-        });
+    const code = req.params.state.toUpperCase();
+    const state = data.states.find( st => st.code === code);
+    const index = req.body.index;
+    const x = index - 1;
+
+    const stateInDB = await State.findOne({ stateCode: code }).exec();
+  
+    // no index entered
+    if (!index) {
+        return res.status(400).json({ 'message': 'State fun fact index value required' });
     }
-    //check for duplicate state
-    const duplicate = await State.findOne({ stateCode: state.code }).exec();
-
-    //Ensure data exists where necessary
-    if(!req.body.index){
-        return res.status(400).json({
-            "message": "State fun fact index value required"
-        });
+    
+    // state record not in DB
+    else if (!stateInDB) {
+        return res.status(404).json({ 'message': `No Fun Facts found for ${state.state}` });
     }
-
-    if(!duplicate){
-        return res.status(400).json({
-            "message": `No Fun Facts found for ${state.state}`
-        });
+    
+    // index value not in array
+    else if (index > stateInDB.funfacts.length) {
+        return res.status(404).json({ 'message': `No Fun Fact found at that index for ${state.state}` });
     }
-
-    if(!Number.isInteger(parseInt(req.body.index))){
-        return res.status(400).json({
-            "message": "Index must be a number entered without quotes"
-        });
-    }
-
-    if(!duplicate.funfacts[req.body.index - 1]){
-        return res.status(400).json({
-            "message": `No Fun Fact found at that index for ${state.state}`
-        });
-    } 
-
-    //Delete item at element index - 1
     try {
-    duplicate.funfacts.splice(req.body.index - 1, 1);
-    duplicate.save();
-    res.json(duplicate);
-    }
-    catch(err){
-        console.error(err);
+        stateInDB.funfacts.splice(x, 1);
+        await stateInDB.save();
+    
+        res.status(200).json(stateInDB);
+    } catch (err) {
+        console.log("Delete failed: " + err);
     }
 }
 
