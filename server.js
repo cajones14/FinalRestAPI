@@ -2,24 +2,18 @@
 require('dotenv').config();
 
 const express = require('express');
+const cors = require('cors');
 const app = express();
 const path = require('path');
 //import cors
-const cors = require('cors');
-const corsOptions = require('./config/corsOptions');
-//import logEvents
-const { logger } = require('./middleware/logEvents');
-//define port for webserver
-const errorHandler = require('./middleware/errorHandler');
+
+//const corsOptions = require('./config/corsOptions');
 const mongoose = require('mongoose');
 const connectDB = require('./config/dbConn');
 const PORT = process.env.PORT || 3500;
 
 //Connect to MongoDB
 connectDB();
-
-//custom middleware logger
-app.use(logger);
 
 //Cors = cross origin resource sharing
 //app.use(cors(corsOptions));
@@ -52,7 +46,6 @@ app.all('*', (req, res) => {
     }
 });
 
-app.use(errorHandler);
 
 mongoose.connection.once('open', () => {
     console.log('Connected to MongoDB');
